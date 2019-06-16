@@ -5,10 +5,12 @@ import (
 
 	"github.com/Luzifer/cloudbox/providers"
 	"github.com/Luzifer/cloudbox/providers/local"
+	"github.com/Luzifer/cloudbox/providers/s3"
 )
 
 var providerInitFuncs = []providers.CloudProviderInitFunc{
 	local.New,
+	s3.New,
 }
 
 func providerFromURI(uri string) (providers.CloudProvider, error) {
