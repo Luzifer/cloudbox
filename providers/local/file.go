@@ -2,8 +2,8 @@ package local
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"fmt"
+	"hash"
 	"io"
 	"os"
 
@@ -26,7 +26,7 @@ func (f File) Info() providers.FileInfo {
 	}
 }
 
-func (f File) Checksum() (string, error) {
+func (f File) Checksum(h hash.Hash) (string, error) {
 	fc, err := f.Content()
 	if err != nil {
 		return "", errors.Wrap(err, "Unable to get file contents")
@@ -37,7 +37,7 @@ func (f File) Checksum() (string, error) {
 		return "", errors.Wrap(err, "Unable to read file contents")
 	}
 
-	return fmt.Sprintf("%x", sha256.Sum256(buf.Bytes())), nil
+	return fmt.Sprintf("%x", h.Sum(buf.Bytes())), nil
 }
 
 func (f File) Content() (io.ReadCloser, error) {

@@ -2,10 +2,13 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
+
+	"github.com/Luzifer/cloudbox/sync"
 )
 
 type shareConfig struct {
@@ -14,8 +17,9 @@ type shareConfig struct {
 }
 
 type syncConfig struct {
-	LocalDir  string `yaml:"local_dir"`
-	RemoteURI string `yaml:"remote_uri"`
+	LocalDir  string          `yaml:"local_dir"`
+	RemoteURI string          `yaml:"remote_uri"`
+	Settings  sync.SyncConfig `yaml:"settings"`
 }
 
 type configFile struct {
@@ -43,6 +47,11 @@ func (c configFile) validate() error {
 func defaultConfig() *configFile {
 	return &configFile{
 		ControlDir: "~/.cache/cloudbox",
+		Sync: syncConfig{
+			Settings: sync.SyncConfig{
+				ScanInterval: time.Minute,
+			},
+		},
 	}
 }
 

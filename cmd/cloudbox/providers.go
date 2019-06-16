@@ -20,7 +20,7 @@ func providerFromURI(uri string) (providers.CloudProvider, error) {
 		cp, err := f(uri)
 		switch err {
 		case nil:
-			if cp.Capabilities()&providers.CapBasic == 0 {
+			if !cp.Capabilities().Has(providers.CapBasic) {
 				return nil, errors.Errorf("Provider %s does not support basic capabilities", cp.Name())
 			}
 

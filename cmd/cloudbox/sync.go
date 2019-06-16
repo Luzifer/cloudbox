@@ -3,7 +3,9 @@ package main
 import (
 	"database/sql"
 	"os"
+	"os/signal"
 	"path"
+	"syscall"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
@@ -37,7 +39,16 @@ func execSync() error {
 		return errors.Wrap(err, "Unable to establish database connection")
 	}
 
-	s := sync.New(local, remote, db)
+	s := sync.New(local, remote, db, conf.Sync.Settings)
+
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		for range sigchan {
+			s.Stop()
+		}
+	}()
 
 	log.Info("Starting sync run...")
 	return errors.Wrap(s.Run(), "Unable to sync")
