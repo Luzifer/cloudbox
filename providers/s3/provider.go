@@ -36,7 +36,12 @@ func New(uri string) (providers.CloudProvider, error) {
 		return nil, errors.Wrap(err, "Invalid URI specified")
 	}
 
-	cfg := aws.NewConfig()
+	region, err := s3manager.GetBucketRegion(context.Background(), session.New(), u.Host, "us-east-1")
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to find bucket region")
+	}
+
+	cfg := aws.NewConfig().WithRegion(region)
 	if u.User != nil {
 		user := u.User.Username()
 		pass, _ := u.User.Password()
@@ -45,11 +50,6 @@ func New(uri string) (providers.CloudProvider, error) {
 
 	sess := session.Must(session.NewSession(cfg))
 	svc := s3.New(sess)
-
-	region, err := s3manager.GetBucketRegion(context.Background(), sess, u.Host, "us-east-1")
-	if err != nil {
-		return nil, errors.Wrap(err, "Unable to find bucket region")
-	}
 
 	return &Provider{
 		bucket:       u.Host,
@@ -165,6 +165,9 @@ func (p *Provider) getFileACL(relativeName string) string {
 	}
 
 	for _, g := range objACL.Grants {
+		if g.Grantee == nil || g.Grantee.URI == nil {
+			continue
+		}
 		if *g.Grantee.URI == "http://acs.amazonaws.com/groups/global/AllUsers" && *g.Permission == "READ" {
 			return s3.ObjectCannedACLPublicRead
 		}

@@ -23,6 +23,9 @@ type Sync struct {
 
 	log *log.Entry
 
+	useChecksum bool
+	hashMethod  hash.Hash
+
 	stop chan struct{}
 }
 
@@ -62,20 +65,32 @@ func (s *Sync) Run() error {
 
 func (s *Sync) Stop() { s.stop <- struct{}{} }
 
-func (s *Sync) fillStateFromProvider(syncState *state, provider providers.CloudProvider, side string, useChecksum bool, hashMethod hash.Hash) error {
+func (s *Sync) getFileInfo(f providers.File) (providers.FileInfo, error) {
+	var info = f.Info()
+
+	if !s.useChecksum || info.Checksum != "" {
+		return info, nil
+	}
+
+	cs, err := f.Checksum(s.hashMethod)
+	if err != nil {
+		return info, errors.Wrap(err, "Unable to fetch checksum")
+	}
+	info.Checksum = cs
+
+	return info, nil
+}
+
+func (s *Sync) fillStateFromProvider(syncState *state, provider providers.CloudProvider, side string) error {
 	files, err := provider.ListFiles()
 	if err != nil {
 		return errors.Wrap(err, "Unable to list files")
 	}
 
 	for _, f := range files {
-		info := f.Info()
-		if useChecksum && info.Checksum == "" {
-			cs, err := f.Checksum(hashMethod)
-			if err != nil {
-				return errors.Wrap(err, "Unable to fetch checksum")
-			}
-			info.Checksum = cs
+		info, err := s.getFileInfo(f)
+		if err != nil {
+			return errors.Wrap(err, "Unable to get file info")
 		}
 
 		syncState.Set(side, sourceScan, info)
@@ -85,21 +100,19 @@ func (s *Sync) fillStateFromProvider(syncState *state, provider providers.CloudP
 }
 
 func (s *Sync) runSync() error {
-	var (
-		hashMethod  = s.remote.GetChecksumMethod()
-		syncState   = newState()
-		useChecksum = s.remote.Capabilities().Has(providers.CapAutoChecksum) || s.conf.ForceUseChecksum
-	)
+	var syncState = newState()
+	s.hashMethod = s.remote.GetChecksumMethod()
+	s.useChecksum = s.remote.Capabilities().Has(providers.CapAutoChecksum) || s.conf.ForceUseChecksum
 
 	if err := s.updateStateFromDatabase(syncState); err != nil {
 		return errors.Wrap(err, "Unable to load database state")
 	}
 
-	if err := s.fillStateFromProvider(syncState, s.local, sideLocal, useChecksum, hashMethod); err != nil {
+	if err := s.fillStateFromProvider(syncState, s.local, sideLocal); err != nil {
 		return errors.Wrap(err, "Unable to load local files")
 	}
 
-	if err := s.fillStateFromProvider(syncState, s.remote, sideRemote, useChecksum, hashMethod); err != nil {
+	if err := s.fillStateFromProvider(syncState, s.remote, sideRemote); err != nil {
 		return errors.Wrap(err, "Unable to load remote files")
 	}
 

@@ -36,11 +36,21 @@ func (s *Sync) addBothCreated(fileName string) error {
 		return errors.New("Checksums differ")
 	}
 
-	if err := s.setDBFileInfo(sideLocal, local.Info()); err != nil {
+	localInfo, err := s.getFileInfo(local)
+	if err != nil {
+		return errors.Wrap(err, "Unable to get file info for local file")
+	}
+
+	if err := s.setDBFileInfo(sideLocal, localInfo); err != nil {
 		return errors.Wrap(err, "Unable to update DB info for local file")
 	}
 
-	if err := s.setDBFileInfo(sideRemote, remote.Info()); err != nil {
+	remoteInfo, err := s.getFileInfo(remote)
+	if err != nil {
+		return errors.Wrap(err, "Unable to get file info for remote file")
+	}
+
+	if err := s.setDBFileInfo(sideRemote, remoteInfo); err != nil {
 		return errors.Wrap(err, "Unable to update DB info for remote file")
 	}
 
@@ -74,11 +84,21 @@ func (s *Sync) transferFile(from, to providers.CloudProvider, sideFrom, sideTo, 
 		return errors.Wrap(err, "Unable to put file")
 	}
 
-	if err := s.setDBFileInfo(sideTo, newFile.Info()); err != nil {
+	newFileInfo, err := s.getFileInfo(newFile)
+	if err != nil {
+		return errors.Wrap(err, "Unable to get file info for target file")
+	}
+
+	if err := s.setDBFileInfo(sideTo, newFileInfo); err != nil {
 		return errors.Wrap(err, "Unable to update DB info for target file")
 	}
 
-	if err := s.setDBFileInfo(sideFrom, file.Info()); err != nil {
+	fileInfo, err := s.getFileInfo(file)
+	if err != nil {
+		return errors.Wrap(err, "Unable to get file info for source file")
+	}
+
+	if err := s.setDBFileInfo(sideFrom, fileInfo); err != nil {
 		return errors.Wrap(err, "Unable to update DB info for source file")
 	}
 
