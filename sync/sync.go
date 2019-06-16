@@ -11,14 +11,14 @@ import (
 	"github.com/Luzifer/cloudbox/providers"
 )
 
-type SyncConfig struct {
+type Config struct {
 	ForceUseChecksum bool          `yaml:"force_use_checksum"`
 	ScanInterval     time.Duration `yaml:"scan_interval"`
 }
 
 type Sync struct {
 	db            *sql.DB
-	conf          SyncConfig
+	conf          Config
 	local, remote providers.CloudProvider
 
 	log *log.Entry
@@ -26,7 +26,7 @@ type Sync struct {
 	stop chan struct{}
 }
 
-func New(local, remote providers.CloudProvider, db *sql.DB, conf SyncConfig, logger *log.Entry) *Sync {
+func New(local, remote providers.CloudProvider, db *sql.DB, conf Config, logger *log.Entry) *Sync {
 	return &Sync{
 		db:     db,
 		conf:   conf,

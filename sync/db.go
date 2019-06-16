@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -30,6 +29,7 @@ func (s *Sync) initSchema() error {
 }
 
 func (s *Sync) deleteDBFileInfo(side, relativeName string) error {
+	// #nosec G201 - fmt is only used to prefix a table with a constant, no user input
 	stmt, err := s.db.Prepare(fmt.Sprintf(`DELETE FROM %s_state WHERE relative_name = ?`, side))
 	if err != nil {
 		return errors.Wrap(err, "Unable to prepare query")
@@ -39,26 +39,8 @@ func (s *Sync) deleteDBFileInfo(side, relativeName string) error {
 	return errors.Wrap(err, "Unable to delete file info")
 }
 
-func (s *Sync) getDBFileInfo(side, relativeName string) (providers.FileInfo, error) {
-	info := providers.FileInfo{}
-
-	stmt, err := s.db.Prepare(fmt.Sprintf("SELECT * from %s_state WHERE relative_name = ?", side))
-	if err != nil {
-		return info, errors.Wrap(err, "Unable to prepare query")
-	}
-
-	row := stmt.QueryRow(relativeName)
-	if err = row.Scan(&info.RelativeName, &info.LastModified, &info.Checksum, &info.Size); err != nil {
-		if err == sql.ErrNoRows {
-			return info, providers.ErrFileNotFound
-		}
-		return info, errors.Wrap(err, "Unable to read response")
-	}
-
-	return info, nil
-}
-
 func (s *Sync) setDBFileInfo(side string, info providers.FileInfo) error {
+	// #nosec G201 - fmt is only used to prefix a table with a constant, no user input
 	stmt, err := s.db.Prepare(fmt.Sprintf(
 		`INSERT INTO %s_state VALUES(?, ?, ?, ?) 
 			ON CONFLICT(relative_name) DO UPDATE SET 
@@ -75,6 +57,7 @@ func (s *Sync) setDBFileInfo(side string, info providers.FileInfo) error {
 
 func (s *Sync) updateStateFromDatabase(st *state) error {
 	for _, table := range []string{sideLocal, sideRemote} {
+		// #nosec G201 - fmt is only used to prefix a table with a constant, no user input
 		rows, err := s.db.Query(fmt.Sprintf("SELECT * FROM %s_state", table))
 		if err != nil {
 			return errors.Wrapf(err, "Unable to query table %s", table)

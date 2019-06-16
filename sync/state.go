@@ -49,7 +49,7 @@ func (s *state) GetChangeFor(relativeName string) (result Change) {
 			result.Register(ChangeLocalAdd)
 		}
 
-		return
+		return result
 	}
 
 	// Check for local changes
@@ -76,7 +76,7 @@ func (s *state) GetChangeFor(relativeName string) (result Change) {
 		result.Register(ChangeRemoteUpdate)
 	}
 
-	return
+	return result
 }
 
 func (s *state) GetRelativeNames() []string {

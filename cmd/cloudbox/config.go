@@ -17,9 +17,9 @@ type shareConfig struct {
 }
 
 type syncConfig struct {
-	LocalDir  string          `yaml:"local_dir"`
-	RemoteURI string          `yaml:"remote_uri"`
-	Settings  sync.SyncConfig `yaml:"settings"`
+	LocalDir  string      `yaml:"local_dir"`
+	RemoteURI string      `yaml:"remote_uri"`
+	Settings  sync.Config `yaml:"settings"`
 }
 
 type configFile struct {
@@ -48,7 +48,7 @@ func defaultConfig() *configFile {
 	return &configFile{
 		ControlDir: "~/.cache/cloudbox",
 		Sync: syncConfig{
-			Settings: sync.SyncConfig{
+			Settings: sync.Config{
 				ScanInterval: time.Minute,
 			},
 		},

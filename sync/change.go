@@ -27,7 +27,7 @@ func (c Change) Changed() bool {
 }
 
 func (c *Change) Register(add Change) {
-	*c = *c | add
+	*c |= add
 }
 
 func (c Change) HasAll(test ...Change) bool {
