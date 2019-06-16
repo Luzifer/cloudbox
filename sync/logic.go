@@ -26,7 +26,16 @@ func (s *Sync) decideAction(syncState *state, fileName string) error {
 	case change.HasAll(ChangeLocalDelete, ChangeRemoteDelete):
 		// Special case: Both vanished, we just need to clean up the sync cache
 		logger.Debug("File deleted locally as well as remotely")
-		// TODO: Handle special case
+
+		if err := s.deleteDBFileInfo(sideLocal, fileName); err != nil {
+			logger.WithError(err).Error("Unable to delete local file info")
+			return nil
+		}
+
+		if err := s.deleteDBFileInfo(sideRemote, fileName); err != nil {
+			logger.WithError(err).Error("Unable to delete remote file info")
+			return nil
+		}
 
 	case change.Is(ChangeLocalAdd) || change.Is(ChangeLocalUpdate):
 		logger.Debug("File added or changed locally, uploading...")
