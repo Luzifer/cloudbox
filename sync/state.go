@@ -27,6 +27,16 @@ func (c *Change) Register(add Change) {
 	*c = *c | add
 }
 
+func (c Change) HasAll(test ...Change) bool {
+	for _, t := range test {
+		if c&t == 0 {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (c Change) HasOne(test ...Change) bool {
 	for _, t := range test {
 		if c&t != 0 {

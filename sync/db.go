@@ -29,6 +29,16 @@ func (s *Sync) initSchema() error {
 	return err
 }
 
+func (s *Sync) deleteDBFileInfo(side, relativeName string) error {
+	stmt, err := s.db.Prepare(fmt.Sprintf(`DELETE FROM %s_state WHERE relative_name = ?`, side))
+	if err != nil {
+		return errors.Wrap(err, "Unable to prepare query")
+	}
+
+	_, err = stmt.Exec(relativeName)
+	return errors.Wrap(err, "Unable to delete file info")
+}
+
 func (s *Sync) getDBFileInfo(side, relativeName string) (providers.FileInfo, error) {
 	info := providers.FileInfo{}
 
@@ -48,7 +58,7 @@ func (s *Sync) getDBFileInfo(side, relativeName string) (providers.FileInfo, err
 	return info, nil
 }
 
-func (s *Sync) setDBFileInfo(side, info providers.FileInfo) error {
+func (s *Sync) setDBFileInfo(side string, info providers.FileInfo) error {
 	stmt, err := s.db.Prepare(fmt.Sprintf(
 		`INSERT INTO %s_state VALUES(?, ?, ?, ?) 
 			ON CONFLICT(relative_name) DO UPDATE SET 

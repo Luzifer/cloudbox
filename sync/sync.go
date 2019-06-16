@@ -103,8 +103,11 @@ func (s *Sync) runSync() error {
 		return errors.Wrap(err, "Unable to load remote files")
 	}
 
-	// TODO: Do something with sync database
-	s.log.Printf("%#v", syncState)
+	for _, fileName := range syncState.GetRelativeNames() {
+		if err := s.decideAction(syncState, fileName); err != nil {
+			return errors.Wrap(err, "Could not execute sync")
+		}
+	}
 
 	return nil
 }
