@@ -21,7 +21,10 @@ func (s *Sync) decideAction(syncState *state, fileName string) error {
 	case change.HasAll(ChangeLocalAdd, ChangeRemoteAdd):
 		// Special case: Both are added, check they are the same file or leave this to manual resolve
 		logger.Debug("File added locally as well as remotely")
-		// TODO: Handle special case
+
+		if err := s.addBothCreated(fileName); err != nil {
+			logger.WithError(err).Error("Unable to add locally as well as remotely added file")
+		}
 
 	case change.HasAll(ChangeLocalDelete, ChangeRemoteDelete):
 		// Special case: Both vanished, we just need to clean up the sync cache
