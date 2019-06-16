@@ -8,48 +8,6 @@ import (
 	"github.com/Luzifer/cloudbox/providers"
 )
 
-type Change uint8
-
-const (
-	ChangeLocalAdd Change = 1 << iota
-	ChangeLocalDelete
-	ChangeLocalUpdate
-	ChangeRemoteAdd
-	ChangeRemoteDelete
-	ChangeRemoteUpdate
-)
-
-func (c Change) Changed() bool {
-	return c != 0
-}
-
-func (c *Change) Register(add Change) {
-	*c = *c | add
-}
-
-func (c Change) HasAll(test ...Change) bool {
-	for _, t := range test {
-		if c&t == 0 {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (c Change) HasOne(test ...Change) bool {
-	for _, t := range test {
-		if c&t != 0 {
-			return true
-		}
-	}
-	return false
-}
-
-func (c Change) Is(test Change) bool {
-	return c == test
-}
-
 const (
 	sideLocal  string = "local"
 	sideRemote string = "remote"

@@ -19,7 +19,7 @@ func (s *Sync) decideAction(syncState *state, fileName string) error {
 		logger.Warn("File has local and remote updates, sync not possible")
 
 	case change.HasAll(ChangeLocalAdd, ChangeRemoteAdd):
-		// Special case: Both are added, check thet are the same file or break
+		// Special case: Both are added, check they are the same file or leave this to manual resolve
 		logger.Debug("File added locally as well as remotely")
 		// TODO: Handle special case
 
@@ -62,8 +62,9 @@ func (s *Sync) decideAction(syncState *state, fileName string) error {
 		}
 
 	default:
-		// Unhandled case
-		logger.WithField("change", change).Warn("Unhandled change case")
+		// Unhandled case (i.e. human screwed around in sync process)
+		// Stuff like: LocalUpdate + RemoteDelete, ...
+		logger.WithField("change", change.String()).Warn("Unhandled change case, sync not possible")
 	}
 
 	return nil
