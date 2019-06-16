@@ -27,8 +27,13 @@ func (c *Change) Register(add Change) {
 	*c = *c | add
 }
 
-func (c Change) Has(test Change) bool {
-	return c&test != 0
+func (c Change) HasOne(test ...Change) bool {
+	for _, t := range test {
+		if c&t != 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (c Change) Is(test Change) bool {
@@ -36,10 +41,10 @@ func (c Change) Is(test Change) bool {
 }
 
 const (
-	SideLocal  string = "local"
-	SideRemote string = "remote"
-	SourceDB   string = "db"
-	SourceScan string = "scan"
+	sideLocal  string = "local"
+	sideRemote string = "remote"
+	sourceDB   string = "db"
+	sourceScan string = "scan"
 )
 
 type stateDetail struct {
@@ -120,22 +125,22 @@ func (s *state) GetRelativeNames() []string {
 	return out
 }
 
-func (s *state) Set(side, source, relativeName string, info providers.FileInfo) {
+func (s *state) Set(side, source string, info providers.FileInfo) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	if _, ok := s.files[relativeName]; !ok {
-		s.files[relativeName] = &stateDetail{}
+	if _, ok := s.files[info.RelativeName]; !ok {
+		s.files[info.RelativeName] = &stateDetail{}
 	}
 
 	switch strings.Join([]string{side, source}, "::") {
 	case "local::db":
-		s.files[relativeName].LocalDB = &info
+		s.files[info.RelativeName].LocalDB = &info
 	case "local::scan":
-		s.files[relativeName].LocalScan = &info
+		s.files[info.RelativeName].LocalScan = &info
 	case "remote::db":
-		s.files[relativeName].RemoteDB = &info
+		s.files[info.RelativeName].RemoteDB = &info
 	case "remote::scan":
-		s.files[relativeName].RemoteScan = &info
+		s.files[info.RelativeName].RemoteScan = &info
 	}
 }

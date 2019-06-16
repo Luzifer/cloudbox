@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -31,7 +32,36 @@ func (p Provider) Name() string                       { return "local" }
 func (p Provider) GetChecksumMethod() hash.Hash       { return sha256.New() }
 
 func (p Provider) ListFiles() ([]providers.File, error) {
-	return nil, errors.New("Not implemented")
+	var (
+		absPath string
+		err     error
+		files   []providers.File
+	)
+
+	if absPath, err = filepath.Abs(p.directory); err != nil {
+		return nil, errors.Wrap(err, "Unable to calculate absolute path")
+	}
+
+	err = filepath.Walk(absPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			// We behave like git: We don't care about dirs themselves
+			return nil
+		}
+
+		files = append(files, File{
+			info:         info,
+			relativeName: strings.TrimLeft(strings.TrimPrefix(path, absPath), "/"),
+			fullPath:     path,
+		})
+
+		return nil
+	})
+
+	return files, errors.Wrap(err, "File listing failed")
 }
 
 func (p Provider) DeleteFile(relativeName string) error {

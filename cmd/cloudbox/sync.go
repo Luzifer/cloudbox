@@ -39,7 +39,7 @@ func execSync() error {
 		return errors.Wrap(err, "Unable to establish database connection")
 	}
 
-	s := sync.New(local, remote, db, conf.Sync.Settings)
+	s := sync.New(local, remote, db, conf.Sync.Settings, log.NewEntry(log.StandardLogger()))
 
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)

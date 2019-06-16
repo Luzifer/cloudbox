@@ -62,3 +62,23 @@ func (s *Sync) setDBFileInfo(side, info providers.FileInfo) error {
 	_, err = stmt.Exec(info.RelativeName, info.LastModified, info.Checksum, info.Size)
 	return errors.Wrap(err, "Unable to upsert file info")
 }
+
+func (s *Sync) updateStateFromDatabase(st *state) error {
+	for _, table := range []string{sideLocal, sideRemote} {
+		rows, err := s.db.Query(fmt.Sprintf("SELECT * FROM %s_state", table))
+		if err != nil {
+			return errors.Wrapf(err, "Unable to query table %s", table)
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			info := providers.FileInfo{}
+			if err = rows.Scan(&info.RelativeName, &info.LastModified, &info.Checksum, &info.Size); err != nil {
+				return errors.Wrap(err, "Unable to read response")
+			}
+			st.Set(table, sourceDB, info)
+		}
+	}
+
+	return nil
+}
