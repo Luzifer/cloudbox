@@ -15,11 +15,13 @@ type commandFunc func() error
 
 const (
 	cmdHelp        command = "help"
+	cmdShare       command = "share"
 	cmdSync        command = "sync"
 	cmdWriteConfig command = "write-config"
 )
 
 var cmdFuncs = map[command]commandFunc{
+	cmdShare:       execShare,
 	cmdSync:        execSync,
 	cmdWriteConfig: execWriteSampleConfig,
 }
