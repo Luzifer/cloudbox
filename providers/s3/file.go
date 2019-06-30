@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,11 +23,12 @@ type File struct {
 
 	s3Conn *s3.S3
 	bucket string
+	prefix string
 }
 
 func (f File) Info() providers.FileInfo {
 	return providers.FileInfo{
-		RelativeName: f.key,
+		RelativeName: strings.Trim(strings.TrimPrefix(f.key, f.prefix), "/"),
 		LastModified: f.lastModified,
 		Checksum:     f.checksum,
 		Size:         f.size,
