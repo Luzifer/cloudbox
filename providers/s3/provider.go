@@ -23,6 +23,7 @@ import (
 type Provider struct {
 	bucket       string
 	bucketRegion string
+	defaultACL   string
 	s3           *s3.S3
 }
 
@@ -51,11 +52,18 @@ func New(uri string) (providers.CloudProvider, error) {
 	sess := session.Must(session.NewSession(cfg))
 	svc := s3.New(sess)
 
-	return &Provider{
+	p := &Provider{
 		bucket:       u.Host,
 		bucketRegion: region,
+		defaultACL:   s3.ObjectCannedACLPrivate,
 		s3:           svc,
-	}, nil
+	}
+
+	if acl := u.Query().Get("acl"); acl == s3.ObjectCannedACLPublicRead || acl == s3.ObjectCannedACLPrivate {
+		p.defaultACL = acl
+	}
+
+	return p, nil
 }
 
 func (p *Provider) Capabilities() providers.Capability {
@@ -161,7 +169,7 @@ func (p *Provider) getFileACL(relativeName string) string {
 	})
 
 	if err != nil {
-		return s3.ObjectCannedACLPrivate
+		return p.defaultACL
 	}
 
 	for _, g := range objACL.Grants {
@@ -173,5 +181,5 @@ func (p *Provider) getFileACL(relativeName string) string {
 		}
 	}
 
-	return s3.ObjectCannedACLPrivate
+	return p.defaultACL
 }
